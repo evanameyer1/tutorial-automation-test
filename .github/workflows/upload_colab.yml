@@ -1,0 +1,46 @@
+name: Upload Notebook and Generate MDX
+
+on:
+  push:
+    paths:
+      - "tutorials/**/*.ipynb"
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+
+    env:
+      GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      COLAB_FOLDER_ID: 18xiVPIwYUAKJoSebzXO9c0aDLsH1hAc4
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          pip install google-api-python-client google-auth google-auth-httplib2 google-auth-oauthlib
+          pip install nbconvert
+
+      - name: Upload notebook to Colab folder
+        id: upload_colab
+        run: |
+          NOTEBOOK=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.ipynb$' | head -n 1)
+          echo "NOTEBOOK=$NOTEBOOK" >> $GITHUB_ENV
+
+          LINK=$(python scripts/upload_to_drive.py $NOTEBOOK --folder "$COLAB_FOLDER_ID")
+          echo "colab_link=$LINK" >> "$GITHUB_OUTPUT"
+
+      - name: Convert .ipynb to Markdown
+        run: |
+          jupyter nbconvert --to markdown "$NOTEBOOK" --output temp_output.md
+
+      - name: Create .mdx file with Colab link
+        run: |
+          COLAB_LINK="${{ steps.upload_colab.outputs.colab_link }}"
+          echo "<a href=\"$COLAB_LINK\" target=\"_blank\">Open in Colab</a>\n" | cat - temp_output.md > "${NOTEBOOK%.ipynb}.mdx"
