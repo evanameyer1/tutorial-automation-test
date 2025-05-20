@@ -48,7 +48,7 @@ jobs:
 
       - name: Convert .ipynb to Markdown
         run: |
-          jupyter nbconvert --to markdown "$NOTEBOOK" --output temp_output
+          jupyter nbconvert --to markdown $NOTEBOOK --output temp_output
 
       - name: Create .mdx file with Colab link
         run: |
