@@ -48,9 +48,14 @@ jobs:
 
       - name: Convert .ipynb to Markdown
         run: |
-          jupyter nbconvert --to markdown "$NOTEBOOK" --output temp_output.md
+          jupyter nbconvert --to markdown "$NOTEBOOK" --output temp_output
 
       - name: Create .mdx file with Colab link
         run: |
           COLAB_LINK="${{ steps.upload_colab.outputs.colab_link }}"
-          echo "<a href=\"$COLAB_LINK\" target=\"_blank\">Open in Colab</a>\n" | cat - temp_output.md > "${NOTEBOOK%.ipynb}.mdx"
+          MDX_PATH="${NOTEBOOK%.ipynb}.mdx"
+
+          # Write the link as the first line
+          echo "<a href=\"$COLAB_LINK\" target=\"_blank\">Open in Colab</a>" > "$MDX_PATH"
+          # Append the converted markdown
+          cat temp_output.md >> "$MDX_PATH"
