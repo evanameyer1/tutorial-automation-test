@@ -30,11 +30,19 @@ jobs:
       - name: Upload notebook to Colab folder
         id: upload_colab
         run: |
-          NOTEBOOK=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.ipynb$' | head -n 1)
+          BEFORE_SHA="${{ github.event.before }}"
+          AFTER_SHA="${{ github.sha }}"
+
+          if ! git cat-file -e $BEFORE_SHA 2>/dev/null; then
+            BEFORE_SHA=$(git rev-parse HEAD^)
+          fi
+
+          NOTEBOOK=$(git diff --name-only $BEFORE_SHA $AFTER_SHA | grep '\.ipynb$' | head -n 1)
           echo "NOTEBOOK=$NOTEBOOK" >> $GITHUB_ENV
 
-          LINK=$(python upload_to_drive.py $NOTEBOOK --folder "$COLAB_FOLDER_ID")
+          LINK=$(python upload_to_drive.py "$NOTEBOOK" --folder "$COLAB_FOLDER_ID")
           echo "colab_link=$LINK" >> "$GITHUB_OUTPUT"
+
 
       - name: Convert .ipynb to Markdown
         run: |
