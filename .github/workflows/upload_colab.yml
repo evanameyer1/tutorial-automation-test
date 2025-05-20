@@ -33,7 +33,7 @@ jobs:
           NOTEBOOK=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep '\.ipynb$' | head -n 1)
           echo "NOTEBOOK=$NOTEBOOK" >> $GITHUB_ENV
 
-          LINK=$(python scripts/upload_to_drive.py $NOTEBOOK --folder "$COLAB_FOLDER_ID")
+          LINK=$(python upload_to_drive.py $NOTEBOOK --folder "$COLAB_FOLDER_ID")
           echo "colab_link=$LINK" >> "$GITHUB_OUTPUT"
 
       - name: Convert .ipynb to Markdown
